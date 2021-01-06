@@ -35,15 +35,14 @@ if __name__ == '__main__':
             empty_data_format = pd.read_pickle("empty_data_format.pkl")
             feature_num= len(empty_data_format.columns)        
         print('feature_num',feature_num)
-        model = NN.Net(feature_num)
-        path = os.getcwd()
-        path=path+ "/net.pt"
         if (os.path.isfile('net.pt'))==False:
+            model = NN.Net(feature_num)
             NN.train(X_train, y_train, model, X_val, y_val, X_test, y_test,
                     args["batch_size"], args["lr"], args["weight_decay"],
                     n_epochs=args["n_epochs"],
                     criterion=loss_function)
-
+            path = os.getcwd()
+            path=path+ "/net.pt"
             torch.save(model.state_dict(),path)
         # optimizer = nn.BCELoss)
         #[category,main_category,currency,country,goal_level,duration,year_launched,month_launched]
