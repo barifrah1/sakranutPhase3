@@ -8,6 +8,7 @@ from sklearn.utils import shuffle
 #from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 # split a dataset into train and test sets
+import pickle
 
 
 class DataLoader:
@@ -106,30 +107,38 @@ class DataLoader:
             if column not in self.option_dict.keys():
                 self.option_dict[column]=[]
             self.option_dict[column]=list(self.data.columns.unique())
+        with open('scale_dict.pickle', 'wb') as handle:
+            pickle.dump(self.scale_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open('option_dict.pickle', 'wb') as handle:
+            pickle.dump(self.option_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)        
         self.empty=self.data.iloc[0:0]
+        self.empty.to_pickle("empty_data_format.pkl")
         columns = self.data.columns
         self.data.columns = columns
         self.data=norm(self.data,self.scale_dict)
-        features = self.data.iloc[:, 2:].columns.tolist()
-        X = self.data.iloc[:, 2:].values
+        features = columns
+        X = self.data.values
         return X, Y, features
 
-    #get data and return row ready to be enter to NN
+    #get empty format dataframe and return row ready to be enter to NN
     # x~ [category,main_category,currency,country,goal_level,duration,year_launched,month_launched]
-    def random_project_preproesses(self,x):
-        self.empty=self.empty.iloc[0:0]
-        self.empty.append(pd.Series(0, index=self.empty.columns), ignore_index=True)
-        self.empty.loc[0,f'{x[0]}']=1
-        self.empty.loc[0,f'main_category_{x[1]}']=1
-        self.empty.loc[0,f'{x[2]}']=1
-        self.empty.loc[0,f'{x[3]}']=1
-        self.empty.loc[0,'goal_level']=x[4]
-        self.empty.loc[0,'duration']=x[5]
-        self.empty.loc[0,'year_launched']=x[6]
-        self.empty.loc[0,'month_launched']=x[7]
-        row=norm(self.empty,self.scale_dict)
-        row=row.values
-        return row
+def random_project_preproesses(empty,x,scale_dict):
+    print(x)
+    empty=empty.iloc[0:0]
+    a = np.zeros(shape=(1,len(empty.columns)))
+    empty = pd.DataFrame(a,columns=empty.columns)
+    empty.loc[0,f'{x[0]}']=1
+    empty.loc[0,f'{x[1]}']=1
+    empty.loc[0,f'{x[2]}']=1
+    empty.loc[0,f'{x[3]}']=1
+    empty.loc[0,'goal_level']=x[4]
+    empty.loc[0,'duration']=x[5]
+    empty.loc[0,'year_launched']=x[6]
+    empty.loc[0,'month_launched']=x[7]
+    print('empty.loc[0',empty.loc[0])
+    row=norm(empty,scale_dict)
+    row=row.values
+    return row
         
 #get data x and mean&std dictionary and return the norm data
 def norm(x,y):

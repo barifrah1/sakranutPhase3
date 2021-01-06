@@ -8,12 +8,14 @@ def prepre_net(feature_num):
     path = os.getcwd()
     path=path+ "/net.pt"
     model.load_state_dict(torch.load(path))
-    model.eval()
     return model
 
 
 def get_pred(net,x):
+    net.eval()
     pred=net(x)
+    print(pred.shape)
+    return pred
     
     
     
