@@ -119,14 +119,14 @@ class DataLoader:
     def random_project_preproesses(self,x):
         self.empty=self.empty.iloc[0:0]
         self.empty.append(pd.Series(0, index=self.empty.columns), ignore_index=True)
-        empty.loc[0,f'{x[0]}']=1
-        empty.loc[0,f'main_category_{x[1]}']=1
-        empty.loc[0,f'{x[2]}']=1
-        empty.loc[0,f'{x[3]}']=1
-        empty.loc[0,'goal_level']=x[4]
-        empty.loc[0,'duration']=x[5]
-        empty.loc[0,'year_launched']=x[6]
-        empty.loc[0,'month_launched']=x[7]
+        self.empty.loc[0,f'{x[0]}']=1
+        self.empty.loc[0,f'main_category_{x[1]}']=1
+        self.empty.loc[0,f'{x[2]}']=1
+        self.empty.loc[0,f'{x[3]}']=1
+        self.empty.loc[0,'goal_level']=x[4]
+        self.empty.loc[0,'duration']=x[5]
+        self.empty.loc[0,'year_launched']=x[6]
+        self.empty.loc[0,'month_launched']=x[7]
         row=norm(self.empty,self.scale_dict)
         row=row.values
         return row
@@ -136,5 +136,3 @@ def norm(x,y):
     for column in x:
         x[column]=(x[column]-y[column][0])/(y[column][1])
     return x
-
-    

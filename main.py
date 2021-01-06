@@ -5,8 +5,10 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import log_loss
 import NN
 from NN import Net
+import torch
 import torch.nn as nn
 from gridsearch import GridSearch
+import os 
 
 GRID_SEARCH_MODE = False
 if __name__ == '__main__':
@@ -26,4 +28,7 @@ if __name__ == '__main__':
                  args["batch_size"], args["lr"], args["weight_decay"],
                  n_epochs=args["n_epochs"],
                  criterion=loss_function)
+        path = os.getcwd()
+        path=path+ "/net.pt"
+        torch.save(model.state_dict(),path)
         # optimizer = nn.BCELoss)
