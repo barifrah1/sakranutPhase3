@@ -27,18 +27,6 @@ class DataLoader:
 
         return X_train, X_val, X_test, y_train, y_val, y_test
 
-    def norm_dict_build(self):
-        self.scale_dict={}
-        for column in self.data:
-            if column not in self.scale_dict.keys():
-                self.scale_dict[column]=[0,0]
-            self.scale_dict[column][0]=self.data[column].mean()
-            self.scale_dict[column][1]=self.data[column].std()
-    
-    def norm(self,x):
-        for column in x:
-            if x=='data'
-            self.x[column]=(self.x[column]-self.scale_dict[column][0])/(self.scale_dict[column][1])
         
 
     def preprocess(self):
@@ -106,23 +94,30 @@ class DataLoader:
             ['category', 'main_category', 'currency', 'country','usd_goal_real'], 1)
         Y = self.data.loc[:, 'state'].values
         self.data = self.data.drop(['state', 'name'], 1)
-        self.norm_dict_build()
-        self.norm(self.data)
+        # data scaling
+        self.scale_dict={}
+        # for data generation
+        self.option_dict={}
+        for column in self.data:
+            if column not in self.scale_dict.keys():
+                self.scale_dict[column]=[0,0]
+            self.scale_dict[column][0]=self.data[column].mean()
+            self.scale_dict[column][1]=self.data[column].std()
+            if column not in self.option_dict.keys():
+                self.option_dict[column]=[]
+            self.option_dict[column]=list(self.data.columns.unique())
         self.empty=self.data.iloc[0:0]
         columns = self.data.columns
         self.data.columns = columns
-
-        
-        for column in self.data:
-            self.data[column]=(self.data[column]-self.scale_dict[column][0])/(self.scale_dict[column][1])
-                    
+        self.data=norm(self.data,self.scale_dict)
         features = self.data.iloc[:, 2:].columns.tolist()
         X = self.data.iloc[:, 2:].values
         return X, Y, features
 
-    #get x numpy array data and return 
+    #get data and return row ready to be enter to NN
     # x~ [category,main_category,currency,country,goal_level,duration,year_launched,month_launched]
     def random_project_preproesses(self,x):
+        self.empty=self.empty.iloc[0:0]
         self.empty.append(pd.Series(0, index=self.empty.columns), ignore_index=True)
         empty.loc[0,f'{x[0]}']=1
         empty.loc[0,f'main_category_{x[1]}']=1
@@ -132,11 +127,14 @@ class DataLoader:
         empty.loc[0,'duration']=x[5]
         empty.loc[0,'year_launched']=x[6]
         empty.loc[0,'month_launched']=x[7]
+        row=norm(self.empty,self.scale_dict)
+        row=row.values
+        return row
         
-        
-        
-            
-        
-    
-    
+#get data x and mean&std dictionary and return the norm data
+def norm(x,y):
+    for column in x:
+        x[column]=(x[column]-y[column][0])/(y[column][1])
+    return x
+
     
