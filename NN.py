@@ -3,7 +3,6 @@ import torch.nn as nn
 from torch.nn import functional as F
 from torch.autograd import Variable
 from data_loader import DataLoader
-from tqdm import tqdm
 import numpy as np
 from sklearn.metrics import roc_curve, roc_auc_score, auc
 from matplotlib import pyplot as plt
@@ -163,7 +162,7 @@ def train(X_train, y_train, model, X_val, y_val, x_test, y_test,
             x_test, y_test, model)
         print(" Test_loss: {} and Test auc: {}".format(
             trained_test_loss, trained_test_auc))
-        
+
     else:
         print("Validation AUC by epoch: {} ".format(
             auc_train, auc_validation))
@@ -171,7 +170,7 @@ def train(X_train, y_train, model, X_val, y_val, x_test, y_test,
             x_test, y_test, model)
         print(" Test_loss: {} and Test auc: {}".format(
             trained_test_loss, trained_test_auc))
-    #torch.save(model.state_dict())        
+    # torch.save(model.state_dict())
         """number_of_params = count_parameters(model)
         print('number_of_params',number_of_params)
         number_of_data_points = y_train.shape[0]
