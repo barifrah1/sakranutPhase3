@@ -196,3 +196,25 @@ def train(X_train, y_train, model, X_val, y_val, x_test, y_test,
         plt.plot(auc_validation)
         plt.show()
         """
+
+
+def train_small_batch(X_train, y_train, model, lr, weight_decay,
+                      n_epochs,
+                      criterion=nn.BCELoss()
+                      ):
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=lr, weight_decay=weight_decay)
+    train_loss = 0
+    for epoch in tqdm(range(1)):
+        model.train()
+        for i in range(1):
+            optimizer.zero_grad()
+            output = model(x_train)
+            loss = criterion(output.flatten(), y.float())
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
+        model.eval()
+        with torch.no_grad():
+            pred = model(X_train)
+    return pred

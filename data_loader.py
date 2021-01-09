@@ -171,7 +171,7 @@ def random_project_preproesses(empty, x, scale_dict):
     empty.loc[0, 'duration'] = x[5]
     empty.loc[0, 'year_launched'] = x[6]
     empty.loc[0, 'month_launched'] = x[7]
-    print('empty.loc[0', empty.loc[0])
+    #print('empty.loc[0', empty.loc[0])
     row = norm(empty, scale_dict)
     row = row.values
     return row
