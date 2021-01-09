@@ -13,6 +13,8 @@ from prediction import *
 import pickle
 import pandas as pd
 from project import Project
+from args import QArgs
+from q_learning import Q_Learning
 
 GRID_SEARCH_MODE = False
 if __name__ == '__main__':
@@ -53,8 +55,8 @@ if __name__ == '__main__':
         # optimizer = nn.BCELoss)
         # [category,main_category,currency,country,goal_level,duration,year_launched,month_launched]
         pro = ['Music', 'main_category_Music', 'USD', 'US', 1891, 20, 2015, 7]
-        proj = Project(option_dict, category_per_main_cat_dict,
-                       currency_per_country)
+        proj = Project([])
+        proj2 = Project(pro)
         project = random_project_preproesses(
             empty_data_format, proj.getProjectValues(), scale_dict)
         project = torch.from_numpy(project).float()
@@ -63,9 +65,13 @@ if __name__ == '__main__':
         learner_net = NN.Net(feature_num)
         # ground truth net traind over original dataset
         gt_net = load_net(feature_num)
-        pred = get_pred(gt_net, project)
+        """pred = get_pred(gt_net, project)
         pred_stupid = get_pred(learner_net, project)
         print(proj.getProjectValues())
         print('prob to be successful project', pred.item())
         print('prob to be successful project_stupid', pred_stupid.item())
-        print('epsilon^2 is ', (pred_stupid.item()-pred.item())**2)
+        print('epsilon^2 is ', (pred_stupid.item()-pred.item())**2)"""
+        q_args = QArgs()
+        print("fdf")
+        q_learn = Q_Learning([proj], q_args, gt_net, learner_net)
+        q_learn.q_learning_loop()
