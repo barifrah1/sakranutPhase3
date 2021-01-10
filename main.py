@@ -3,7 +3,7 @@ from utils import args, loss_function
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import log_loss
 import NN
-from NN import Net
+from NN import Net, predict
 import torch
 import torch.nn as nn
 from gridsearch import GridSearch
@@ -39,6 +39,7 @@ if __name__ == '__main__':
             currency_per_country = pickle.load(handle)
         empty_data_format = pd.read_pickle("empty_data_format.pkl")
         feature_num = len(empty_data_format.columns)
+
     print('feature_num', feature_num)
     if (os.path.isfile('net.pt')) == False:
         model = NN.Net(feature_num)
@@ -57,9 +58,26 @@ if __name__ == '__main__':
     gt_net = load_net(feature_num)
     q_args = QArgs()
     print("fdf")
+
+    data_loader = DataLoader(args, False)
+    # preprocessing
+    X, Y, columnsInfo = data_loader.preprocess()
+    # split data to train and test
+    X_train, X_val, X_test, y_train, y_val, y_test = data_loader.split_train_validation_test(
+        X, Y)
     li = []
-    for i in range(5):
+    for i in range(q_args.num_of_projects_to_start):
         proj = Project([])
         li.append(proj)
-    q_learn = Q_Learning(li, q_args, gt_net, learner_net)
+    q_learn = Q_Learning(li, q_args, gt_net, learner_net,
+                         X_test=X_test, y_test=y_test)
     q_learn.q_learning_loop()
+
+    auc_gt, _, test_loss_gt, __ = predict(
+        X_test, y_test, gt_net, auc_list=None, loss_list=None)
+    auc_leraner, _, test_loss_learner, __ = predict(
+        X_test, y_test, learner_net, auc_list=None, loss_list=None)
+    print("GT net Test_loss : {} and GT net Test auc for : {}".format(
+        test_loss_gt, auc_gt))
+    print("Learner net Test_loss : {} and Learner net Test auc for : {}".format(
+        test_loss_learner, auc_leraner))

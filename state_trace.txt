@@ -1,0 +1,1 @@
+('Translations', 'main_category_Publishing', 'OTHER_CURRENCY', 'OTHER_COUNTRY', 18615, 80, 2010, 1) ('duration', 60)

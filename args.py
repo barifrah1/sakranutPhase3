@@ -1,7 +1,7 @@
 
 
 class QArgs():
-    gamma = 0.9
-    eta = 0.1
-    num_of_projects_to_start = 1
-    num_of_iters = 1000
+    gamma = 0.99
+    eta = 0.01
+    num_of_projects_to_start = 20
+    num_of_iters = 100000

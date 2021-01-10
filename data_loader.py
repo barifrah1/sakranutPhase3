@@ -111,7 +111,7 @@ class DataLoader:
                 self.data[self.data['country'] == coun]['currency'].unique())
         category = pd.get_dummies(self.data['category'], drop_first=False)
         main_category = pd.get_dummies(
-            self.data['main_category'], drop_first=True)
+            self.data['main_category'], drop_first=False)
         currency = pd.get_dummies(self.data['currency'], drop_first=False)
         country = pd.get_dummies(self.data['country'], drop_first=False)
         self.data = self.data.drop(

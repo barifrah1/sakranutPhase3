@@ -207,7 +207,7 @@ def train_small_batch(X_train, y_train, model, lr, weight_decay,
     train_loss = 0
     for epoch in tqdm(range(1)):
         model.train()
-        for i in range(10):
+        for i in range(1):
             optimizer.zero_grad()
             output = model(X_train)
             loss = criterion(output.flatten(), y_train.float())

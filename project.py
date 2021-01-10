@@ -10,6 +10,7 @@ from tqdm import tqdm
 import pickle
 import pandas as pd
 import random
+import os
 
 
 class Project():
@@ -21,15 +22,16 @@ class Project():
     MAIN_CATEGORY = 1
     CURRENCY = 2
     COUNTRY = 3
-    with open('scale_dict.pickle', 'rb') as handle:
-        scale_dict = pickle.load(handle)
-    with open('option_dict.pickle', 'rb') as handle:
-        option_dict = pickle.load(handle)
-    with open('category_per_main_cat_dict.pickle', 'rb') as handle:
-        category_per_main_cat_dict = pickle.load(handle)
-    with open('currency_per_country_dict.pickle', 'rb') as handle:
-        currency_per_country = pickle.load(handle)
-    empty_data_format = pd.read_pickle("empty_data_format.pkl")
+    if (os.path.isfile('scale_dict.pickle')) == True:
+        with open('scale_dict.pickle', 'rb') as handle:
+            scale_dict = pickle.load(handle)
+        with open('option_dict.pickle', 'rb') as handle:
+            option_dict = pickle.load(handle)
+        with open('category_per_main_cat_dict.pickle', 'rb') as handle:
+            category_per_main_cat_dict = pickle.load(handle)
+        with open('currency_per_country_dict.pickle', 'rb') as handle:
+            currency_per_country = pickle.load(handle)
+        empty_data_format = pd.read_pickle("empty_data_format.pkl")
 
     def __init__(self, project: list):
         self.project = project
@@ -71,7 +73,8 @@ class Project():
         for f in self.actions.keys():
             count = len(self.actions[f].keys())
             for a in self.actions[f].keys():
-                init[f][a] = 1/(8*count)
+                #init[f][a] = 1/(8*count)
+                init[f][a] = 1
         return init
 
     def getNetProjectFormat(self):

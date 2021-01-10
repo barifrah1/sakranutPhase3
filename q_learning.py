@@ -8,19 +8,22 @@ from sklearn.metrics import roc_curve, roc_auc_score, auc
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from project import Project
-from NN import train_small_batch
+from NN import train_small_batch, predict
+import random
 
 
 class Q_Learning():
 
     # in case building the net for the final model
-    def __init__(self, projectsToStartWith: list,  args, gt_net, learner):
+    def __init__(self, projectsToStartWith: list,  args, gt_net, learner, X_test=None, y_test=None):
         self.Q_func = {}
         self.projects = projectsToStartWith
         self.nextIterProjects = []
         self.args = args
         self.gt = gt_net
         self.learner = learner
+        self.X_test = X_test
+        self.y_test = y_test
         self.features_dict = {'category': 0, 'main_category': 1, 'currency': 2, 'country': 3,
                               'goal_level': 4, 'duration': 5, 'year_launched': 6, 'month_launched': 7}
 
@@ -32,8 +35,21 @@ class Q_Learning():
 
     def getNextState(self, state, action):
         next_state = list(state)
+
         feature_index = self.features_dict[action[0]]
         next_state[feature_index] = action[1]
+        if(action[0] == 'main_category'):
+            main_cat = action[1]
+            optional_categories = Project.category_per_main_cat_dict[main_cat]
+            new_action = random.choice(optional_categories)
+            feature_index = self.features_dict['category']
+            next_state[feature_index] = new_action
+        if(action[0] == 'country'):
+            cou = action[1]
+            optional_curr = Project.currency_per_country[cou]
+            new_action = random.choice(optional_curr)
+            feature_index = self.features_dict['currency']
+            next_state[feature_index] = new_action
         return tuple(next_state)
 
     def getActionsProbs(self, state):
@@ -62,6 +78,14 @@ class Q_Learning():
             raise Exception(
                 f"Sorry,no appropriate action was found for state {state}")
 
+    def _chooseRandomAction(self, state):
+        actions_vector = self.Q_func[state].keys()
+        chosenRandomAction = random.choice(list(actions_vector))
+        next_state = self.getNextState(state, chosenRandomAction)
+        if(next_state not in self.Q_func.keys()):
+            self._addStateAndPossibleActionsToQ(Project(next_state))
+        return chosenRandomAction, next_state
+
     def reward(self, pred_learner, pred_gt):
         epsilon2 = (pred_learner - pred_gt)**2
         return epsilon2
@@ -76,7 +100,7 @@ class Q_Learning():
                     self.setQvalue(state, (f, a), init[f][a])
 
     def _createTensorOfDataToTrain(self, projects):
-        X = torch.empty([0, 186])
+        X = torch.empty([0, 187])
         for p in projects:
             X = torch.cat(
                 [X, torch.tensor(p[0].getNetProjectFormat()).float()], dim=0)
@@ -94,23 +118,46 @@ class Q_Learning():
         return pred_from_learner, y  # pred_from_learner, pred_of_gt_net
 
     def q_learning_loop(self):
+        trained_val_auc = -1
+        auc_validation = []
+        trained_val_loss = -1
+        validation_loss_list = []
         for p in self.projects:
             action = ('duration', list(
                 p.getOptionalActions()['duration'].keys())[0])
             self.nextIterProjects.append((p, action))
+        untrained_test_auc, _, untrained_test_loss, _ = predict(
+            self.X_test, self.y_test, self.gt)
+        print(
+            f"GT net Test loss is: {untrained_test_loss}")
+        print(
+            f"GT net Test auc is: {untrained_test_auc}")
+        untrained_test_auc, _, untrained_test_loss, _ = predict(
+            self.X_test, self.y_test, self.learner)
+        print(
+            f"Learner Net Test loss before training is: {untrained_test_loss}")
+        print(
+            f"Learner Net Test auc before training is: {untrained_test_auc}")
         for iter in tqdm(range(self.args.num_of_iters)):
             # here we should train the learner_net
             pred_learner, pred_gt = self._trainLearnerAndGetPreds(
                 self.nextIterProjects)
             ind = 0
             saveProjectsToNextIter = []
+            f = open("state_trace.txt", "a")
+            f.write(str(self.nextIterProjects[0][0].getProjectValues(
+            ))+" "+str(self.nextIterProjects[0][1])+"\n")
+            f.close()
             for proj, cur_action in self.nextIterProjects:
                 state = proj.getProjectValues()
                 # case when we havent visit in this project yet, then defint its q value to uniform distribution
                 if(state not in self.Q_func.keys()):
                     self._addStateAndPossibleActionsToQ(proj)
                 r = self.reward(pred_learner[ind], pred_gt[ind])
-                bestAction, next_state = self.chooseBestAction(state)
+                sample_random = random.random()
+                if(sample_random < 5*iter/self.args.num_of_iters):
+                    bestAction, next_state = self.chooseBestAction(state)
+                bestAction, next_state = self._chooseRandomAction(state)
                 td_error = r.item() + self.args.gamma * self.getQvalue(next_state,
                                                                        bestAction) - self.getQvalue(state, cur_action)
                 self.setQvalue(state, cur_action, self.getQvalue(
@@ -118,4 +165,13 @@ class Q_Learning():
                 saveProjectsToNextIter.append(
                     (Project(next_state), bestAction))
                 ind += 1
+            if iter % 50 == 0:
+                trained_val_auc, auc_validation, trained_val_loss, validation_loss_list = predict(
+                    self.X_test, self.y_test, self.learner, auc_validation, validation_loss_list)
+                print(
+                    f"Current validation loss on epoch {iter+1} is: {trained_val_loss} \n Current validation auc is: { trained_val_auc} ")
             self.nextIterProjects = saveProjectsToNextIter
+        trained_val_auc, auc_validation, trained_val_loss, validation_loss_list = predict(
+            self.X_test, self.y_test, self.learner, auc_validation, validation_loss_list)
+        print(
+            f"Final validation loss  is: {trained_val_loss} \n Final validation auc is: { trained_val_auc} ")
