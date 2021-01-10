@@ -68,7 +68,7 @@ class Q_Learning():
             next_state = self.getNextState(state, action)
             if(next_state not in self.Q_func.keys()):
                 self._addStateAndPossibleActionsToQ(Project(next_state))
-            if(self.getQvalue(next_state, action) > max_value):
+            if(self.getQvalue(next_state, action) > max_value and next_state != state):
                 max_value = self.getQvalue(next_state, action)
                 max_action = action
                 save_next_state = next_state
@@ -154,10 +154,16 @@ class Q_Learning():
                 if(state not in self.Q_func.keys()):
                     self._addStateAndPossibleActionsToQ(proj)
                 r = self.reward(pred_learner[ind], pred_gt[ind])
-                sample_random = random.random()
-                if(sample_random < 5*iter/self.args.num_of_iters):
-                    bestAction, next_state = self.chooseBestAction(state)
-                bestAction, next_state = self._chooseRandomAction(state)
+
+                if(iter > 500):
+                    sample_random = random.random()
+                    if(sample_random < 0.9):
+                        bestAction, next_state = self.chooseBestAction(state)
+                    else:
+                        bestAction, next_state = self._chooseRandomAction(
+                            state)
+                else:
+                    bestAction, next_state = self._chooseRandomAction(state)
                 td_error = r.item() + self.args.gamma * self.getQvalue(next_state,
                                                                        bestAction) - self.getQvalue(state, cur_action)
                 self.setQvalue(state, cur_action, self.getQvalue(
