@@ -75,5 +75,5 @@ class Project():
         return init
 
     def getNetProjectFormat(self):
-        return random_project_preproesses(
-            Project.empty_data_format, self.project, Project.scale_dict)
+        return np.array(random_project_preproesses(
+            Project.empty_data_format, self.project, Project.scale_dict))

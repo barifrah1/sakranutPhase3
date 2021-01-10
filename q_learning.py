@@ -76,10 +76,11 @@ class Q_Learning():
                     self.setQvalue(state, (f, a), init[f][a])
 
     def _createTensorOfDataToTrain(self, projects):
-        X = torch.tensor([])
+        X = torch.empty([0, 186])
         for p in projects:
-            X.cat(p[0].getProjectValues())
-        self.gt().eval()
+            X = torch.cat(
+                [X, torch.tensor(p[0].getNetProjectFormat()).float()], dim=0)
+        self.gt.eval()
         with torch.no_grad():
             y = self.gt(X)
         return X, y
@@ -101,17 +102,20 @@ class Q_Learning():
             # here we should train the learner_net
             pred_learner, pred_gt = self._trainLearnerAndGetPreds(
                 self.nextIterProjects)
+            ind = 0
+            saveProjectsToNextIter = []
             for proj, cur_action in self.nextIterProjects:
                 state = proj.getProjectValues()
                 # case when we havent visit in this project yet, then defint its q value to uniform distribution
                 if(state not in self.Q_func.keys()):
                     self._addStateAndPossibleActionsToQ(proj)
-                r = self.reward(pred_learner, pred_gt)
+                r = self.reward(pred_learner[ind], pred_gt[ind])
                 bestAction, next_state = self.chooseBestAction(state)
-                td_error = r + self.args.gamma * \
-                    self.getQvalue(next_state, bestAction) - \
-                    self.getQvalue(state, cur_action)
+                td_error = r.item() + self.args.gamma * self.getQvalue(next_state,
+                                                                       bestAction) - self.getQvalue(state, cur_action)
                 self.setQvalue(state, cur_action, self.getQvalue(
                     state, cur_action)+self.args.eta*td_error)
-            self.nextIterProjects = []
-            self.nextIterProjects.append((Project(next_state), bestAction))
+                saveProjectsToNextIter.append(
+                    (Project(next_state), bestAction))
+                ind += 1
+            self.nextIterProjects = saveProjectsToNextIter

@@ -159,7 +159,6 @@ class DataLoader:
 
 
 def random_project_preproesses(empty, x, scale_dict):
-    print(x)
     empty = empty.iloc[0:0]
     a = np.zeros(shape=(1, len(empty.columns)))
     empty = pd.DataFrame(a, columns=empty.columns)
