@@ -74,7 +74,7 @@ class Project():
             count = len(self.actions[f].keys())
             for a in self.actions[f].keys():
                 #init[f][a] = 1/(8*count)
-                init[f][a] = 1
+                init[f][a] = random.random()
         return init
 
     def getNetProjectFormat(self):

@@ -15,7 +15,7 @@ import pandas as pd
 from project import Project
 from args import QArgs
 from q_learning import Q_Learning
-
+from utils import plot_loss_graph, plot_auc_graph
 
 if __name__ == '__main__':
 
@@ -69,9 +69,21 @@ if __name__ == '__main__':
     for i in range(q_args.num_of_projects_to_start):
         proj = Project([])
         li.append(proj)
-    q_learn = Q_Learning(li, q_args, gt_net, learner_net,
-                         X_test=X_test, y_test=y_test)
-    q_learn.q_learning_loop()
+
+    if(os.path.isfile('Q.pickle')) == True:
+        with open('Q.pickle', 'rb') as handle:
+            Q = pickle.load(handle)
+        q_learn = Q_Learning(li, q_args, gt_net, learner_net,
+                             X_test=X_test, y_test=y_test, Q=Q)
+    else:
+        q_learn = Q_Learning(li, q_args, gt_net, learner_net,
+                             X_test=X_test, y_test=y_test, Q=None)
+    loss_by_episode, auc_by_episode = q_learn.q_learning_loop()
+    plot_loss_graph(loss_by_episode)
+    plot_auc_graph(auc_by_episode)
+    """q_learn_random = Q_Learning(li, q_args, gt_net, learner_net,
+                                X_test=X_test, y_test=y_test,Q=None)
+    q_learn_random.q_learning_loop(is_random_policy=True)"""
 
     auc_gt, _, test_loss_gt, __ = predict(
         X_test, y_test, gt_net, auc_list=None, loss_list=None)

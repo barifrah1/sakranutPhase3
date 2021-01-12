@@ -76,7 +76,9 @@ def predict(x, y, model, auc_list=None, loss_list=None):
     with torch.no_grad():
         x_var = Variable(torch.FloatTensor(x))
         output = model(x_var)
-        loss = criterion(output.flatten(), torch.tensor(y).float()).item()
+        if(len(output.shape) != 2):
+            output = output.unsqueeze(dim=1)
+        loss = criterion(output, torch.tensor(y).float()).item()
         auc = roc_auc_score(y, output.numpy())
         if loss_list != None:
             loss_list.append(loss)
@@ -205,12 +207,12 @@ def train_small_batch(X_train, y_train, model, lr, weight_decay,
     optimizer = torch.optim.Adam(
         model.parameters(), lr=lr, weight_decay=weight_decay)
     train_loss = 0
-    for epoch in tqdm(range(1)):
+    for epoch in range(1):
         model.train()
         for i in range(1):
             optimizer.zero_grad()
             output = model(X_train)
-            loss = criterion(output.flatten(), y_train.float())
+            loss = criterion(output, y_train.float())
             loss.backward()
             optimizer.step()
             train_loss += loss.item()

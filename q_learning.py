@@ -10,13 +10,16 @@ from tqdm import tqdm
 from project import Project
 from NN import train_small_batch, predict
 import random
+import pickle
 from copy import deepcopy
 
 
 class Q_Learning():
 
     # in case building the net for the final model
-    def __init__(self, projectsToStartWith: list,  args, gt_net, learner, X_test=None, y_test=None):
+    def __init__(self, projectsToStartWith: list,  args, gt_net, learner, X_test=None, y_test=None, Q=None):
+        if(Q != None):
+            self.Q_func = Q
         self.Q_func = {}
         self.projects = projectsToStartWith
         self.nextIterProjects = []
@@ -157,10 +160,21 @@ class Q_Learning():
                                               1, criterion=nn.BCELoss())
         return pred_from_learner, y  # pred_from_learner, pred_of_gt_net
 
-    def q_learning_loop(self):
+    def updateQfile(self):
+        with open('Q.pickle', 'wb') as handle:
+            pickle.dump(self.Q_func, handle,
+                        protocol=pickle.HIGHEST_PROTOCOL)
+
+    def q_learning_loop(self, is_random_policy=False):
         loss_by_episode = []
         auc_by_episode = []
-        for episode in range(self.args.num_episodes):
+        untrained_test_auc, _, untrained_test_loss, _ = predict(
+            self.X_test, self.y_test, self.gt)
+        print(
+            f"GT net Test loss is: {untrained_test_loss}")
+        print(
+            f"GT net Test auc is: {untrained_test_auc}")
+        for episode in tqdm(range(self.args.num_episodes)):
             self.learner = deepcopy(self.original_learner)
             trained_val_auc = -1
             auc_validation = []
@@ -172,18 +186,12 @@ class Q_Learning():
                     p.getOptionalActions()['duration'].keys())[0])
                 self.nextIterProjects.append((p, action))
             untrained_test_auc, _, untrained_test_loss, _ = predict(
-                self.X_test, self.y_test, self.gt)
-            print(
-                f"GT net Test loss is: {untrained_test_loss}")
-            print(
-                f"GT net Test auc is: {untrained_test_auc}")
-            untrained_test_auc, _, untrained_test_loss, _ = predict(
                 self.X_test, self.y_test, self.learner)
             print(
                 f"Learner Net Test loss before training is: {untrained_test_loss}")
             print(
                 f"Learner Net Test auc before training is: {untrained_test_auc}")
-            for iter in tqdm(range(self.args.num_of_iters)):
+            for iter in range(self.args.num_of_iters):
                 # here we should train the learner_net
                 pred_learner, pred_gt = self._trainLearnerAndGetPreds(
                     self.nextIterProjects, iter=iter)
@@ -202,7 +210,7 @@ class Q_Learning():
 
                     if(iter > self.args.iter_to_choose_best_action):
                         sample_random = random.random()
-                        if(sample_random < 0.9):
+                        if(sample_random < 0.9 and is_random_policy == False):
                             bestAction, next_state = self.chooseBestAction(
                                 state)
                         else:
@@ -218,11 +226,14 @@ class Q_Learning():
                     saveProjectsToNextIter.append(
                         (Project(next_state), bestAction))
                     ind += 1
+
                 if iter % 50 == 0:
                     trained_val_auc, auc_validation, trained_val_loss, validation_loss_list = predict(
                         self.X_test, self.y_test, self.learner, auc_validation, validation_loss_list)
                     print(
                         f"Current validation loss on epoch {iter+1} is: {trained_val_loss} \n Current validation auc is: { trained_val_auc} ")
+                    if(iter > 10 and validation_loss_list[-2] - validation_loss_list[-1] < 0.005):
+                        break
                 self.nextIterProjects = saveProjectsToNextIter
 
                 if(iter % 51 == 0):
@@ -239,4 +250,6 @@ class Q_Learning():
             loss_by_episode.append(trained_val_loss)
             auc_by_episode.append(trained_val_auc)
             print(
-                "episode {episode+1} : loss: {trained_val_loss}  auc: {trained_val_auc}")
+                f"episode {episode+1} : loss: {trained_val_loss}  auc: {trained_val_auc}")
+            self.updateQfile()
+        return loss_by_episode, auc_by_episode
