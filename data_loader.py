@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import scipy.stats
-import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 from sklearn.utils import shuffle
 #from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -35,59 +34,47 @@ class DataLoader:
         self.data = self.data.dropna()
         self.data['main_category'] = 'main_category_' + \
             self.data['main_category']
-        self.data = self.data.drop(['ID',
-                                    'launched', 'cat_sub_cat', 'log_usd_goal_real'], 1)
+        self.data = self.data.drop(['ID','launched','month_launched', 'year_launched','cat_sub_cat', 'log_usd_goal_real'], 1)
         self.data.loc[~self.data['country'].isin(
             ['US', 'GB']), 'country'] = 'OTHER_COUNTRY'
         self.data.loc[~self.data['currency'].isin(
             ['USD', 'GBP', 'EUR', 'CAD', 'AUD']), 'currency'] = 'OTHER_CURRENCY'
-        # round to next 10's numbers
-        self.data['duration'] = 10*round(self.data['duration']/10)
-        self.data['duration'] = self.data['duration'].astype(int)
-        self.data = self.data[self.data['duration'] > 5]
-        self.data['goal_level'] = 0
+        # round to next 20's numbers
+        self.data['duration'] = 20*round(self.data['duration']/20)
+        self.data['duration']=self.data['duration'].astype(int)
+        self.data.loc[(self.data['duration']==0),'duration']=20
 
+        self.data['goal_level']=0
+        #self.data['year_launched']=1
+        #self.data['month_launched']=1
+        self.data=self.data[self.data.groupby('category')['category'].transform('size') > 3000]
         cat_columns = ['state']
         self.data['state'] = self.data['state'].astype('category')
         self.data[cat_columns] = self.data[cat_columns].apply(
             lambda x: x.cat.codes)
         # one hot encoding for categorical variables
 
-        i = 0
-        while i <= 0.95:
-            if i == 0:
-                mean = self.data.loc[self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(
-                    i+0.05)]['usd_goal_real'].mean()
-                self.data.loc[(self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(
-                    i+0.05)), 'goal_level'] = int(mean)
-                i += 0.05
-                i = round(i, 2)
+        i=0
+        while i<1:
+            if i==0:
+                mean=self.data.loc[self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.1)]['usd_goal_real'].mean()
+                self.data.loc[(self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.1)), 'goal_level'] =int(mean)
+                i+=0.1
+                i=round(i,2)
                 continue
-            if i == 0.95:
-                mean = self.data.loc[self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(
-                    i)]['usd_goal_real'].mean()
-                self.data.loc[(self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(
-                    i)), 'goal_level'] = int(mean)
-                i += 0.05
-                i = round(i, 2)
+            if i==0.9:
+                mean=self.data.loc[self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i)]['usd_goal_real'].mean()
+                self.data.loc[(self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i)), 'goal_level'] =int(mean)
+                i=round(i,2)
                 break
 
-            if i == 0.45:
-                mean = self.data.loc[((self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i)) & (
-                    self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.058)))]['usd_goal_real'].mean()
-                self.data.loc[((self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i)) & (
-                    self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.058))), 'goal_level'] = int(mean)
-                i += 0.05
-                i = round(i, 2)
-                continue
+            mean=self.data.loc[((self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i) ) & (
+                    self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.1) ))]['usd_goal_real'].mean()  
+            self.data.loc[((self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i) ) & (
+                    self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.1))), 'goal_level'] = int(mean)
+            i+=0.1
+            i=round(i,2)
 
-            mean = self.data.loc[((self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i)) & (
-                self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.05)))]['usd_goal_real'].mean()
-
-            self.data.loc[((self.data['usd_goal_real'] > self.data.usd_goal_real.quantile(i)) & (
-                self.data['usd_goal_real'] <= self.data.usd_goal_real.quantile(i+0.05))), 'goal_level'] = int(mean)
-            i += 0.05
-            i = round(i, 2)
         columns_to_drop = ['name', 'usd_goal_real', 'state']
         # for data generation
         self.option_dict = {}
@@ -168,8 +155,8 @@ def random_project_preproesses(empty, x, scale_dict):
     empty.loc[0, f'{x[3]}'] = 1
     empty.loc[0, 'goal_level'] = x[4]
     empty.loc[0, 'duration'] = x[5]
-    empty.loc[0, 'year_launched'] = x[6]
-    empty.loc[0, 'month_launched'] = x[7]
+    #empty.loc[0, 'year_launched'] = x[6]
+    #empty.loc[0, 'month_launched'] = x[7]
     #print('empty.loc[0', empty.loc[0])
     row = norm(empty, scale_dict)
     row = row.values

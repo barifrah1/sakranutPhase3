@@ -50,6 +50,7 @@ if __name__ == '__main__':
         path = os.getcwd()
         path = path + "/net.pt"
         torch.save(model.state_dict(), path)
+       
     # optimizer = nn.BCELoss)
     # [category,main_category,currency,country,goal_level,duration,year_launched,month_launched]
     # learner net starting with random weights
@@ -81,9 +82,9 @@ if __name__ == '__main__':
     loss_by_episode, auc_by_episode = q_learn.q_learning_loop()
     plot_loss_graph(loss_by_episode)
     plot_auc_graph(auc_by_episode)
-    """q_learn_random = Q_Learning(li, q_args, gt_net, learner_net,
+    q_learn_random = Q_Learning(li, q_args, gt_net, learner_net,
                                 X_test=X_test, y_test=y_test,Q=None)
-    q_learn_random.q_learning_loop(is_random_policy=True)"""
+    q_learn_random.q_learning_loop(is_random_policy=True)
 
     auc_gt, _, test_loss_gt, __ = predict(
         X_test, y_test, gt_net, auc_list=None, loss_list=None)
@@ -93,3 +94,4 @@ if __name__ == '__main__':
         test_loss_gt, auc_gt))
     print("Learner net Test_loss : {} and Learner net Test auc for : {}".format(
         test_loss_learner, auc_leraner))
+    

@@ -15,9 +15,9 @@ import os
 
 class Project():
     features = ['category', 'main_category', 'currency', 'country',
-                'goal_level', 'duration', 'year_launched', 'month_launched']
+                'goal_level', 'duration']
     features_dict = {'category': 0, 'main_category': 1, 'currency': 2, 'country': 3,
-                     'goal_level': 4, 'duration': 5, 'year_launched': 6, 'month_launched': 7}
+                     'goal_level': 4, 'duration': 5}
     CATEGORY = 0
     MAIN_CATEGORY = 1
     CURRENCY = 2

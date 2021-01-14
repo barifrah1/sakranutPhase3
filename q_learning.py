@@ -138,7 +138,7 @@ class Q_Learning():
                     self.setQvalue(state, (f, a), init[f][a])
 
     def _createTensorOfDataToTrain(self, projects):
-        X = torch.empty([0, 187])
+        X = torch.empty([0, 57])
         for p in projects:
             X = torch.cat(
                 [X, torch.tensor(p[0].getNetProjectFormat()).float()], dim=0)
@@ -228,6 +228,7 @@ class Q_Learning():
                     ind += 1
 
                 if iter % 50 == 0:
+                    print('Q SIZE:',len(self.Q_func.keys()))
                     trained_val_auc, auc_validation, trained_val_loss, validation_loss_list = predict(
                         self.X_test, self.y_test, self.learner, auc_validation, validation_loss_list)
                     print(
@@ -251,5 +252,5 @@ class Q_Learning():
             auc_by_episode.append(trained_val_auc)
             print(
                 f"episode {episode+1} : loss: {trained_val_loss}  auc: {trained_val_auc}")
-            self.updateQfile()
+            #self.updateQfile()
         return loss_by_episode, auc_by_episode
